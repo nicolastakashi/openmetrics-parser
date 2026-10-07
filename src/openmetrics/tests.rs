@@ -68,17 +68,8 @@ fn run_openmetrics_validation() {
 
 #[test]
 fn test_units_by_type() {
+    // Counter, gauge, info and stateset units are covered by the conformance suite.
     let cases = [
-        (
-            "counter",
-            "# TYPE a_seconds counter\n# UNIT a_seconds seconds\na_seconds_total 1\n# EOF\n",
-            true,
-        ),
-        (
-            "gauge",
-            "# TYPE a_seconds gauge\n# UNIT a_seconds seconds\na_seconds 1\n# EOF\n",
-            true,
-        ),
         (
             "unknown",
             "# TYPE a_seconds unknown\n# UNIT a_seconds seconds\na_seconds 1\n# EOF\n",
@@ -99,16 +90,6 @@ fn test_units_by_type() {
             "summary",
             "# TYPE acme_http_router_request_seconds summary\n# UNIT acme_http_router_request_seconds seconds\nacme_http_router_request_seconds_sum{path=\"/api/v1\",method=\"GET\"} 9036.32\nacme_http_router_request_seconds_count{path=\"/api/v1\",method=\"GET\"} 807283.0\n# EOF\n",
             true,
-        ),
-        (
-            "info",
-            "# TYPE a_u info\n# UNIT a_u u\na_u_info 1\n# EOF\n",
-            false,
-        ),
-        (
-            "stateset",
-            "# TYPE a_u stateset\n# UNIT a_u u\na_u{a_u=\"x\"} 1\n# EOF\n",
-            false,
         ),
     ];
 
