@@ -65,3 +65,61 @@ fn run_openmetrics_validation() {
         }
     }
 }
+
+#[test]
+fn test_units_by_type() {
+    let cases = [
+        (
+            "counter",
+            "# TYPE a_seconds counter\n# UNIT a_seconds seconds\na_seconds_total 1\n# EOF\n",
+            true,
+        ),
+        (
+            "gauge",
+            "# TYPE a_seconds gauge\n# UNIT a_seconds seconds\na_seconds 1\n# EOF\n",
+            true,
+        ),
+        (
+            "unknown",
+            "# TYPE a_seconds unknown\n# UNIT a_seconds seconds\na_seconds 1\n# EOF\n",
+            true,
+        ),
+        (
+            "histogram",
+            "# TYPE a_seconds histogram\n# UNIT a_seconds seconds\na_seconds_bucket{le=\"0.1\"} 1\na_seconds_bucket{le=\"+Inf\"} 3\na_seconds_sum 0.5\na_seconds_count 3\n# EOF\n",
+            true,
+        ),
+        (
+            "gaugehistogram",
+            "# TYPE a_seconds gaugehistogram\n# UNIT a_seconds seconds\na_seconds_bucket{le=\"+Inf\"} 3\na_seconds_gcount 3\na_seconds_gsum 0.5\n# EOF\n",
+            true,
+        ),
+        (
+            // Taken from the complete exposition example in the OpenMetrics specification.
+            "summary",
+            "# TYPE acme_http_router_request_seconds summary\n# UNIT acme_http_router_request_seconds seconds\nacme_http_router_request_seconds_sum{path=\"/api/v1\",method=\"GET\"} 9036.32\nacme_http_router_request_seconds_count{path=\"/api/v1\",method=\"GET\"} 807283.0\n# EOF\n",
+            true,
+        ),
+        (
+            "info",
+            "# TYPE a_u info\n# UNIT a_u u\na_u_info 1\n# EOF\n",
+            false,
+        ),
+        (
+            "stateset",
+            "# TYPE a_u stateset\n# UNIT a_u u\na_u{a_u=\"x\"} 1\n# EOF\n",
+            false,
+        ),
+    ];
+
+    for (name, exposition, should_parse) in cases {
+        let parsed = crate::openmetrics::parse_openmetrics(exposition);
+        assert_eq!(
+            parsed.is_ok(),
+            should_parse,
+            "{}: unexpected result {:?}",
+            name,
+            parsed
+        );
+    }
+}
